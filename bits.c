@@ -1,8 +1,9 @@
 /* 
  * CS:APP Data Lab 
  * 
- * <Please put your name and userid here>
- * 
+ * Park Changhyeon 20170292
+
+
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
  *
@@ -169,9 +170,10 @@ NOTES:
  *   Legal ops: ~ |
  *   Max ops: 8
  *   Rating: 1
- */
+ */ 
 int bitAnd(int x, int y) {
-  return 2;
+/* negate both x,y and compute 'or' bit operation. Then negate the result bit.*/
+ return  ~((~x) | (~y));
 }
 /* 
  * getByte - Extract byte n from word x
@@ -182,7 +184,9 @@ int bitAnd(int x, int y) {
  *   Rating: 2
  */
 int getByte(int x, int n) {
-  return 2;
+ /* shift x to the right 8n bit. Then do 'and' operation with 0xff.*/
+ int shift = (x >> (n << 3));
+ return shift &  0xff;
 }
 /* 
  * logicalShift - shift x to the right by n, using a logical shift
@@ -193,7 +197,11 @@ int getByte(int x, int n) {
  *   Rating: 3 
  */
 int logicalShift(int x, int n) {
-  return 2;
+ /* make cont such that first n bits are 0, others are 1. make arithmetic n shift 'arth' and then compute and operatioin them. */ 
+ int cont = ~(((1 << 31) >> n) << 1);
+ int arth = x >> n;
+
+ return cont & arth;
 }
 /*
  * bitCount - returns count of number of 1's in word
@@ -203,7 +211,25 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int bitCount(int x) {
-  return 2;
+/* cont1 = 0101...0101 32 bit, cont2 = 00110011...0011 32 bit, cont3 = 00001111...00001111 32 bit, cont4 = 00000
+ * 000111111110000000011111111 32 bit, cont5 = 00000000000000001111111111111111 32 bit.
+ * first, x & cont1 collects x's odd digits bit, (x>>1) & cont1 collects x's even digits bit. adding them results * sum of odd and even digits. like this manner, repeating this process leads to sum of all digits which equals t * to the number of 1's. */ 
+ int a = (0x55 + (0x55 << 8));
+ int cont1 = a + (a << 16);
+ int b = (0x33 + (0x33 << 8));
+ int cont2 = b + (b << 16);
+ int c = (0x0f + (0x0f << 8));
+ int cont3 = c + (c << 16);
+ int cont4 = 0xff + (0xff << 16);
+ int cont5 = 0xff + (0xff << 8);
+
+ int val = x;
+ val = (val & cont1)+((val>>1) & cont1);
+ val = (val & cont2)+((val>>2) & cont2);
+ val = (val & cont3)+((val>>4) & cont3);
+ val = (val & cont4)+((val>>8) & cont4);
+ val = (val & cont5)+((val>>16) & cont5);
+  return val;
 }
 /* 
  * bang - Compute !x without using !
@@ -213,7 +239,10 @@ int bitCount(int x) {
  *   Rating: 4 
  */
 int bang(int x) {
-  return 2;
+ /* except 0, x and -x have different most significant digits. so, do 'or' operation to x, -x and shift 
+  * to the right 31 results 0xffffffff. For 0, it results 0. Add 1 to it, then except 0 all bits return 1. */
+ int a = (x | (~x + 1)) >> 31 ;
+ return a+1;
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -221,8 +250,9 @@ int bang(int x) {
  *   Max ops: 4
  *   Rating: 1
  */
-int tmin(void) {
-  return 2;
+int tmin(void) { 
+ /* minimum two's complement integer is 2^31 */
+ return (1 << 31);
 }
 /* 
  * fitsBits - return 1 if x can be represented as an 
@@ -234,7 +264,12 @@ int tmin(void) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-  return 2;
+ /* cnt = 32 - n. shift to the left cnt and to the right again. if x can be represented as n-bit,
+  * lower n bit of x and shifted are same so ^ operation results 0. 
+  * if x is more than n-bit, there must be different bit between x and shifted at the postion upper than n.  */ 
+ int cnt = 33 + (~n);
+ int shifted = ((x << cnt) >> cnt);
+ return !(x ^ shifted);
 }
 /* 
  * divpwr2 - Compute x/(2^n), for 0 <= n <= 30
@@ -245,7 +280,12 @@ int fitsBits(int x, int n) {
  *   Rating: 2
  */
 int divpwr2(int x, int n) {
-    return 2;
+ /* if x is positive, just do x >> n. if x is negative, ((x-1) >> n) + 1. */
+
+ int a = x >> 31;
+ int c = ((a & 1) << n) + a;
+ 
+ return ((x+c) >> n);
 }
 /* 
  * negate - return -x 
@@ -255,7 +295,9 @@ int divpwr2(int x, int n) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+ /* first, do 'not' operation and add 1. */
+ int a = ~x +1;
+  return a;
 }
 /* 
  * isPositive - return 1 if x > 0, return 0 otherwise 
@@ -265,7 +307,12 @@ int negate(int x) {
  *   Rating: 3
  */
 int isPositive(int x) {
-  return 2;
+ /* shift to the right 31 and then add 1. if positive, result is 1, if negative, result is 10(2).
+  * if 0, result is 1. Do if only x is 0, !x is  1. do 'xor' operation to the 
+  * shifted one and !x. */
+ int a = (x >> 31) +1;
+ return
+ a^(!x); 
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -275,7 +322,11 @@ int isPositive(int x) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+ /* if x and y have different sign, done. Otherwise, let diff = y-x = y + (~x) +1.
+  * Then apply same process like isPositive. then do '!' operation at last. */ 
+ int diff  = y+ (~x) +1;
+ int sign = x ^ y;
+ return ((((sign & x) | (~sign & ~diff)) >> 31) & 1);
 }
 /*
  * ilog2 - return floor(log base 2 of x), where x > 0
@@ -285,7 +336,15 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4
  */
 int ilog2(int x) {
-  return 2;
+ /* first, check whether the most significant 1 belongs to upper half of lower half. And then, check 
+  * whether 1 belongs to upper part of it. Repeat this process until finding exact place of it. */
+ int cnt = 0;
+ cnt = (!!(x >> 16)) << 4;
+ cnt += (!!(x >> (cnt + 8))) << 3;
+ cnt += (!!(x >> (cnt +4))) << 2;
+ cnt += (!!(x >> (cnt + 2))) <<1;
+ cnt += (!!(x >> (cnt + 1)));
+ return cnt; 
 }
 /* 
  * float_neg - Return bit-level equivalent of expression -f for
@@ -299,7 +358,14 @@ int ilog2(int x) {
  *   Rating: 2
  */
 unsigned float_neg(unsigned uf) {
- return 2;
+   /* if exp = 111...1 and frac != 0, then uf is NaN. except it, just change the sign bit. */
+   int exp = 0xff << 23;
+   int frac = (1 << 23) + (~0);
+ 
+   if (((uf & exp) == exp) && (frac & uf)) 
+      return uf;
+ 
+   return uf ^ (1 <<31);
 }
 /* 
  * float_i2f - Return bit-level equivalent of expression (float) x
@@ -311,8 +377,70 @@ unsigned float_neg(unsigned uf) {
  *   Rating: 4
  */
 unsigned float_i2f(int x) {
-  return 2;
+   /* if x is negative, change it to positive form. By the same manner as ilog2, find the 'e' value. 
+    * Then find the Exp, and frac. When we find the frac, for the case that we should round it, then 
+    * we consider each cases. */
+   int unsign;
+   int sign;
+   int e = 0;
+   
+   if (x == 0) 
+      return 0;
+   if (x == 0x80000000) 
+      return 0xcf000000;
+   if (x >> 31) {
+      unsign = ~x + 1;
+      sign = 1;
+   } else { 
+      unsign = x;
+      sign = 0;
+   }
+   if (unsign >> 16) 
+      e += 16;
+   if (unsign >> (8 + e))     
+      e += 8;
+   if (unsign >> (4 + e))
+      e += 4;
+   if (unsign >> (2 + e))
+      e += 2;
+   if (unsign >> (1 + e))
+      e += 1;
+
+   int exp = e + 127;
+   int frac;
+   int result = 0;
+   int shift;
+   if (e >= 23) {
+      shift = e - 23;
+      frac = (unsign >> shift) & 0x007fffff;
+      if ((e >= 24) && ((unsign >> (e-24)) & 1))  {
+         if (e == 24) {
+            if (frac & 1) {
+               if (frac == 0x00ffffff) {
+                  frac = 0;
+                  exp += 1;
+               } else { frac +=1; }}}
+         else if ((!(unsign << (56 - e))) && (frac & 1)) {
+            
+            if (frac == 0x00ffffff) {
+               frac = 0;
+               exp += 1;
+            } else { frac += 1;}
+         } else if (unsign << (56- e)) {
+            if (frac == 0x00ffffff) {
+               frac = 0;
+               exp += 1;
+            } else { frac += 1;}
+         }
+      }      
+   } else {
+      shift = 23 - e;
+      frac = (unsign << shift) & 0x007fffff;
+   }
+   result = (sign << 31) + (exp << 23) + frac;
+   return result;
 }
+
 /* 
  * float_twice - Return bit-level equivalent of expression 2*f for
  *   floating point argument f.
@@ -325,5 +453,17 @@ unsigned float_i2f(int x) {
  *   Rating: 4
  */
 unsigned float_twice(unsigned uf) {
-  return 2;
+   /* for +0, -0, return argument. For NaN and infinite, return argument. For small number whose exp part is 0, 
+    * just shift to the left 1 bit. Otherwise, add 1 to the exp. */
+   if (uf==0 || uf == 0x80000000)
+       return uf;
+  
+   if(((uf>>23) & 0xff) == 0xff) 
+      return uf;
+  
+   if(((uf>>23) & 0xff) == 0x00) {
+      return (uf & (1<<31)) + (uf << 1);
+   }
+   return uf + (1<<23);
+
 }
