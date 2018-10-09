@@ -383,7 +383,10 @@ unsigned float_i2f(int x) {
    int unsign;
    int sign;
    int e = 0;
-   
+   int shift;
+   int result=0;
+   int frac;
+   int exp = e+127;
    if (x == 0) 
       return 0;
    if (x == 0x80000000) 
@@ -396,20 +399,22 @@ unsigned float_i2f(int x) {
       sign = 0;
    }
    if (unsign >> 16) 
-      e += 16;
+      {e += 16;
+      exp += 16;}
    if (unsign >> (8 + e))     
-      e += 8;
+      {e += 8;
+      exp += 8;}
    if (unsign >> (4 + e))
-      e += 4;
+      {e += 4;
+      exp += 4;}
    if (unsign >> (2 + e))
-      e += 2;
+      {e += 2;
+      exp += 2;}
    if (unsign >> (1 + e))
-      e += 1;
+      {e += 1;
+      exp += 1;}
 
-   int exp = e + 127;
-   int frac;
-   int result = 0;
-   int shift;
+
    if (e >= 23) {
       shift = e - 23;
       frac = (unsign >> shift) & 0x007fffff;
